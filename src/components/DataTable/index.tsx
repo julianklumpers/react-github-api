@@ -26,32 +26,41 @@ const Pagination: React.SFC<PaginationProps> = ({ currentPage, pageCount, onPage
         (a.indexOf(e) === i && e > 0) : e)
 
     // Less then 2 pages means no use for pagination
-    return pageCount < 2 ? null : <nav>
-        <ul className="pagination">
-            {currentPage - 1 > 0 &&
-                <li key={shortId.generate()} className="page-item" >
-                    <span className="page-link" onClick={() => onPageChange(currentPage - 1)}>
-                        Previous
+    return pageCount < 2 ? null : (
+        <nav>
+            <ul className="pagination">
+                {currentPage - 1 > 0 &&
+                    <li key={shortId.generate()} className="page-item" >
+                        <span className="page-link" onClick={() => onPageChange(currentPage - 1)}>
+                            Previous
+                        </span>
+                    </li>
+                }
+                {pages.map(page =>
+                    <li
+                        key={shortId.generate()}
+                        className={['page-item', page === currentPage && 'active']
+                            .filter(Boolean)
+                            .join(' ')}
+                    >
+                        <span
+                            className="page-link"
+                            onClick={() => Number(page) && onPageChange(Number(page))}
+                        >
+                            {page}
+                        </span>
+                    </li>
+                )}
+                {currentPage < pageCount &&
+                    <li key={shortId.generate()} className="page-item">
+                        <span className="page-link" onClick={() => onPageChange(currentPage + 1)}>
+                            Next
                     </span>
-                </li>
-            }
-            {pages.map(page =>
-                <li key={shortId.generate()}
-                    className={['page-item', page === currentPage && 'active'].filter(Boolean).join(' ')}>
-                    <span className="page-link" onClick={() => Number(page) && onPageChange(Number(page))}>
-                        {page}
-                    </span>
-                </li>
-            )}
-            {currentPage < pageCount &&
-                <li key={shortId.generate()} className="page-item">
-                    <span className="page-link" onClick={() => onPageChange(currentPage + 1)}>
-                        Next
-                    </span>
-                </li>
-            }
-        </ul>
-    </nav>;
+                    </li>
+                }
+            </ul>
+        </nav>
+    );
 }
 
 
@@ -67,7 +76,7 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, onDataSet }) =>
 
                 const res = await fetch(source);
                 const json = await res.json()
-                const count = json.total_count > 1000 ? 1000 : json.total_count; // Github limitation
+                const count = json.total_count > 1000 ? 1000 : json.total_count; // Github limit
                 setData(json.items);
                 setPageCount(Math.ceil(count / perPage))
                 setCurrentPage(1);
@@ -111,7 +120,11 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, onDataSet }) =>
                     </>
                 }
             </table>
-            <Pagination currentPage={currentPage} pageCount={pageCount} onPageChange={onPageChange} />
+            <Pagination
+                currentPage={currentPage}
+                pageCount={pageCount}
+                onPageChange={onPageChange}
+            />
         </div>
     );
 }
