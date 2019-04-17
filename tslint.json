@@ -1,0 +1,21 @@
+{
+  "defaultSeverity": "error",
+  "extends": [
+    "tslint-react",
+    "tslint-config-airbnb",
+    "tslint-plugin-prettier"
+  ],
+  "rules": {
+    "ter-indent": 4,
+    "import-name": false,
+    "variable-name": false,
+    "jsx-no-multiline-js": false,
+    "jsx-no-lambda": false,
+    "quotemark": [
+      true,
+      "single",
+      "jsx-double"
+    ]
+  },
+  "rulesDirectory": []
+}
