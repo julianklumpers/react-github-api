@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, ReactNode } from 'react';
 import shortId from 'shortid';
 
 export interface DataTableProps {
     source: string;
     headers: Array<string | object>;
-    mutators?: { [key: string]: (data: object) => string };
+    mutators?: { [key: string]: (data: object) => string | ReactNode };
     onDataSet?(): void;
 }
 
@@ -51,7 +51,7 @@ const Pagination: React.SFC<PaginationProps> = ({ currentPage, pageCount, onPage
                         >
                             {page}
                         </span>
-                    </li>
+                    </li>,
                 )}
                 {currentPage < pageCount &&
                     <li key={shortId.generate()} className="page-item">
@@ -76,10 +76,10 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, mutators, onDat
             if (source) {
 
                 const res = await fetch(source);
-                const json = await res.json()
+                const json = await res.json();
                 const count = json.total_count > 1000 ? 1000 : json.total_count; // Github limit
                 setData(json.items);
-                setPageCount(Math.ceil(count / perPage))
+                setPageCount(Math.ceil(count / perPage));
                 setCurrentPage(1);
             }
 
@@ -121,7 +121,6 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, mutators, onDat
                                         <td key={shortId.generate()}>
                                             {(mutators && typeof mutators[col] === 'function') ?
                                                 mutators[col](row) : row[col]}
-                                            {row[col]}
                                         </td>
                                     ))}
                                 </tr>

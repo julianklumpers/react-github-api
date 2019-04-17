@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { Layout, Search, DataTable } from '../components';
+import { Link } from 'react-router-dom';
 
 const Overview = () => {
   const [source, setSource] = useState();
-  const [search, setSearch] = useState('asd')
+  const [search, setSearch] = useState('asd');
 
   const onSearchChange = (e: React.FormEvent<HTMLInputElement>) => {
-    setSearch(e.currentTarget.value)
-  }
+    setSearch(e.currentTarget.value);
+  };
 
   const onSearchSubmit = () => {
-    setSource(`https://api.github.com/search/users?q=${search}&per_page=25`)
-  }
+    setSource(`https://api.github.com/search/users?q=${search}&per_page=25`);
+  };
 
   return (
     <Layout>
@@ -24,10 +25,11 @@ const Overview = () => {
       />
       <DataTable
         headers={['login', { id: 'Ident' }]}
+        mutators={{ login: (data: any) => <Link to="a">{data.login && data.login}</Link> }}
         source={source}
       />
     </Layout>
-  )
+  );
 };
 
 export default Overview;
