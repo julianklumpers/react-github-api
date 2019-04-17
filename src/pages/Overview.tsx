@@ -4,14 +4,15 @@ import { Link } from 'react-router-dom';
 
 const Overview = () => {
   const [source, setSource] = useState();
-  const [search, setSearch] = useState('asd');
+  const [search, setSearch] = useState('onursagir');
 
   const onSearchChange = (e: React.FormEvent<HTMLInputElement>) => {
     setSearch(e.currentTarget.value);
   };
 
-  const onSearchSubmit = () => {
-    setSource(`https://api.github.com/search/users?q=${search}&per_page=25`);
+  const onSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSource(`https://api.github.com/search/users?q=${search}`);
   };
 
   return (
@@ -24,8 +25,12 @@ const Overview = () => {
         onSubmit={onSearchSubmit}
       />
       <DataTable
-        headers={['login', { id: 'Ident' }]}
-        mutators={{ login: (data: any) => <Link to="a">{data.login && data.login}</Link> }}
+        headers={['login', 'score']}
+        mutators={{
+          login: (data: any) => (
+            <Link to={`/users/${data.login}`}> {data.login && data.login}</Link>
+          )
+        }}
         source={source}
       />
     </Layout>

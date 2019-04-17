@@ -1,9 +1,10 @@
 import React, { useState, useEffect, ReactNode } from 'react';
 import shortId from 'shortid';
+import styles from './style.module.scss';
 
 export interface DataTableProps {
     source: string;
-    headers: Array<string | object>;
+    headers?: Array<string | object>;
     mutators?: { [key: string]: (data: object) => string | ReactNode };
     onDataSet?(): void;
 }
@@ -28,40 +29,45 @@ const Pagination: React.SFC<PaginationProps> = ({ currentPage, pageCount, onPage
         (a.indexOf(e) === i && e > 0) : e);
 
     // Less then 2 pages means no use for pagination
-    return pageCount < 2 ? null : (
-        <nav>
-            <ul className="pagination">
-                {currentPage - 1 > 0 &&
-                    <li key={shortId.generate()} className="page-item" >
-                        <span className="page-link" onClick={() => onPageChange(currentPage - 1)}>
-                            Previous
-                        </span>
-                    </li>
-                }
-                {pages.map(page =>
-                    <li
-                        key={shortId.generate()}
-                        className={['page-item', page === currentPage && 'active']
-                            .filter(Boolean)
-                            .join(' ')}
-                    >
-                        <span
-                            className="page-link"
-                            onClick={() => Number(page) && onPageChange(Number(page))}
+    return (pageCount || 0) < 2 ? null : (
+        <div className={styles.pagination}>
+            <nav>
+                <ul className="pagination">
+                    {currentPage - 1 > 0 &&
+                        <li key={shortId.generate()} className="page-item" >
+                            <span
+                                className="page-link"
+                                onClick={() => onPageChange(currentPage - 1)}
+                            >
+                                Previous
+                            </span>
+                        </li>
+                    }
+                    {pages.map(page =>
+                        <li
+                            key={shortId.generate()}
+                            className={['page-item', page === currentPage && 'active']
+                                .filter(Boolean)
+                                .join(' ')}
                         >
-                            {page}
-                        </span>
-                    </li>,
-                )}
-                {currentPage < pageCount &&
-                    <li key={shortId.generate()} className="page-item">
-                        <span className="page-link" onClick={() => onPageChange(currentPage + 1)}>
-                            Next
+                            <span
+                                className="page-link"
+                                onClick={() => Number(page) && onPageChange(Number(page))}
+                            >
+                                {page}
+                            </span>
+                        </li>,
+                    )}
+                    {currentPage < pageCount &&
+                        <li key={shortId.generate()} className="page-item">
+                            <span className="page-link" onClick={() => onPageChange(currentPage + 1)}>
+                                Next
                     </span>
-                    </li>
-                }
-            </ul>
-        </nav>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
     );
 };
 
@@ -71,23 +77,31 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, mutators, onDat
     const [pageCount, setPageCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
 
+
+    const getSource = () =>
+        source.includes('?') ? `${source}&per_page=${perPage}` : `${source}?per_page=${perPage}`;
+
+
+    const fetchData = async () => {
+        if (source) {
+
+            const res = await fetch(getSource());
+            const json = await res.json();
+            const count = json.total_count > 1000 ? 1000 : json.total_count; // Github limit
+            const data = json.items ? json.items : json;
+
+            setData(data);
+            setPageCount(Math.ceil(count / perPage));
+            setCurrentPage(1);
+        }
+    };
+
     useEffect(() => {
-        (async () => {
-            if (source) {
-
-                const res = await fetch(source);
-                const json = await res.json();
-                const count = json.total_count > 1000 ? 1000 : json.total_count; // Github limit
-                setData(json.items);
-                setPageCount(Math.ceil(count / perPage));
-                setCurrentPage(1);
-            }
-
-        })();
+        fetchData();
     }, [source]);
 
     const onPageChange = async (page: number) => {
-        const res = await fetch(`${source}&page=${page}`);
+        const res = await fetch(`${getSource()}&page=${page}`);
         const json = await res.json();
 
         setData(json.items);
@@ -103,7 +117,7 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, mutators, onDat
     return (
         <div>
             <table className="table">
-                {data.length > 0 &&
+                {data && data.length > 0 &&
                     <>
                         <thead>
                             <tr>
