@@ -4,6 +4,7 @@ import shortId from 'shortid';
 export interface DataTableProps {
     source: string;
     headers: Array<string | object>;
+    mutators?: { [key: string]: (data: object) => string };
     onDataSet?(): void;
 }
 
@@ -14,6 +15,7 @@ export interface PaginationProps {
 }
 
 const Pagination: React.SFC<PaginationProps> = ({ currentPage, pageCount, onPageChange }) => {
+
     const left: Array<string | number> = currentPage - 3 > 0 ?
         [1, '...'] : [1, 2, 3];
     const middle: Array<string | number> = (currentPage - 3 > 0 && currentPage < pageCount - 2) ?
@@ -23,7 +25,7 @@ const Pagination: React.SFC<PaginationProps> = ({ currentPage, pageCount, onPage
 
     // Can't use [...new Set()] here because we dont want to filter out the '...' elements
     const pages = [...left, ...middle, ...right].filter((e, i, a) => Number(e) ?
-        (a.indexOf(e) === i && e > 0) : e)
+        (a.indexOf(e) === i && e > 0) : e);
 
     // Less then 2 pages means no use for pagination
     return pageCount < 2 ? null : (
@@ -61,11 +63,10 @@ const Pagination: React.SFC<PaginationProps> = ({ currentPage, pageCount, onPage
             </ul>
         </nav>
     );
-}
+};
 
-
-const DataTable: React.SFC<DataTableProps> = ({ source, headers, onDataSet }) => {
-    const perPage = 25 // could be a feature to make this changable later
+const DataTable: React.SFC<DataTableProps> = ({ source, headers, mutators, onDataSet }) => {
+    const perPage = 25; // could be a feature to make this changable later
     const [data, setData] = useState([]);
     const [pageCount, setPageCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
@@ -82,19 +83,22 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, onDataSet }) =>
                 setCurrentPage(1);
             }
 
-        })()
-    }, [source])
+        })();
+    }, [source]);
 
     const onPageChange = async (page: number) => {
         const res = await fetch(`${source}&page=${page}`);
-        const json = await res.json()
+        const json = await res.json();
 
         setData(json.items);
         setCurrentPage(page);
-    }
+    };
 
-    const _headers = headers || Object.keys(data[0]);
-    // typeof header ===  <th key={shortId.generate()}>{header}</th>
+    const columns = headers || Object.keys(data[0]);
+    const columnNames = columns.map(c => typeof c === 'object' ?
+        Object.values(c) : c).flat();
+    const columnValues = columns.map(c => typeof c === 'object' ?
+        Object.keys(c) : c).flat();
 
     return (
         <div>
@@ -103,16 +107,22 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, onDataSet }) =>
                     <>
                         <thead>
                             <tr>
-                                {_headers.map(header => typeof header === 'object'
-                                    ? <th key={shortId.generate()}></th>
-                                    : <th key={shortId.generate()}>{header}</th>)}
+                                {columnNames.map(col => (
+                                    <th key={shortId.generate()}>
+                                        {col}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody>
                             {data.map(row => (
                                 <tr key={shortId.generate()}>
-                                    {Object.values(row).map(col => (
-                                        <td>{col}</td>
+                                    {columnValues.map(col => (
+                                        <td key={shortId.generate()}>
+                                            {(mutators && typeof mutators[col] === 'function') ?
+                                                mutators[col](row) : row[col]}
+                                            {row[col]}
+                                        </td>
                                     ))}
                                 </tr>
                             ))}
@@ -127,6 +137,6 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, onDataSet }) =>
             />
         </div>
     );
-}
+};
 
 export default DataTable;
