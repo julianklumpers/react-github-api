@@ -60,9 +60,12 @@ const Pagination: React.SFC<PaginationProps> = ({ currentPage, pageCount, onPage
                     )}
                     {currentPage < pageCount &&
                         <li key={shortId.generate()} className="page-item">
-                            <span className="page-link" onClick={() => onPageChange(currentPage + 1)}>
+                            <span
+                                className="page-link"
+                                onClick={() => onPageChange(currentPage + 1)}
+                            >
                                 Next
-                    </span>
+                            </span>
                         </li>
                     }
                 </ul>
@@ -77,10 +80,8 @@ const DataTable: React.SFC<DataTableProps> = ({ source, headers, mutators, onDat
     const [pageCount, setPageCount] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
 
-
     const getSource = () =>
         source.includes('?') ? `${source}&per_page=${perPage}` : `${source}?per_page=${perPage}`;
-
 
     const fetchData = async () => {
         if (source) {
